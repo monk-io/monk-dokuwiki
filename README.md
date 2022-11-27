@@ -101,10 +101,10 @@ You can quickly setup by editing the values there.
 
 | Variable       | Description                                                                    | Default              |
 | -------------- | ------------------------------------------------------------------------------ | -------------------- |
-| hostname       | Your Jenkins master hostname                                                   | <- ip-address-public |
+| hostname       | Your Dokuwiki master hostname                                                  | <- ip-address-public |
 | enable-traefik | If disabled traffic will be routed only to Dokuwiki via non-ssl encrypted port | true                 |
 | force-https    | If enabled traffic will always be routed only to ssl encrypted port            | true                 |
-| http-port      | Port that Traefik/Jenkins will listen for non SSL traffic                      | 80                   |
+| http-port      | Port that Traefik/Dokuwiki will listen for non SSL traffic                     | 80                   |
 | https-port     | Port that Traefik will listen for SSL traffic                                  | 443                  |
 
 ## Stop, remove and clean up workloads and templates
@@ -115,5 +115,5 @@ monk purge -x dokuwiki/server
 ```
 
 ## Persistency
-If you're using any of the clouds available via Monk. You can use volume definition to spin a disk block device to make your Jenkins instance independent from the node it's running on.
+If you're using any of the clouds available via Monk. You can use volume definition to spin a disk block device to make your Dokuwiki instance independent from the node it's running on.
 To do simply uncomment the `volume` block in `manifest.yaml`
