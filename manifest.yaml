@@ -1,0 +1,98 @@
+namespace: /dokuwiki
+
+server:
+  defines: runnable
+  metadata:
+    website: https://www.dokuwiki.org/dokuwiki
+    name: Dokuwiki
+    icon: https://www.dokuwiki.org/lib/tpl/dokuwiki/images/logo.png
+    publisher: monk.io
+    description: DokuWiki is a simple to use and highly versatile Open Source wiki software that doesn't require a database. It is loved by users for its clean and readable syntax.
+    source: https://github.com/splitbrain/dokuwiki
+
+  variables:
+    hostname:
+      type: string
+      value: <- ip-address-public
+    enable-traefik:
+      type: bool
+      value: true
+    force-https:
+      type: bool
+      value: true
+    http-port:
+      type: string
+      value: 80
+    https-port:
+      type: string
+      value: 443
+
+  # volumes:
+  #   dokuwiki:
+  #     size: 200
+  #     kind: SSD
+  #     path: <- `${monk-volume-path}/dokuwikistorage`
+  #     backup:
+  #       rotation-days: 5
+  #       every: 1
+  #       kind: day
+  #       start-time: 03:00
+  #       start-day: MONDAY
+
+  containers:
+    traefik:
+      image: traefik
+      image-tag: v2.9.1
+      paths:
+        - "/var/run/podman/podman.sock:/var/run/docker.sock:z"
+        - <- `${monk-volume-path}/dokuwikiacme:/acmestore`
+      ports:
+        - <- $enable-traefik then(`${http-port}:80`)
+        - <- $enable-traefik then(`${https-port}:443`)
+      bash: |
+        traefik \
+          --entrypoints.web.address=:80 \
+          --entrypoints.websecure.address=:443 \
+          --entrypoints.websecure.http.tls=true \
+          --providers.docker=true \
+          --providers.docker.exposedByDefault=false \
+          --log.level=INFO \
+          --certificatesresolvers.letsencrypt.acme.email=unsupported@unfortunateemail.com \
+          --certificatesresolvers.letsencrypt.acme.storage=/acmestore/acme.json \
+          --certificatesresolvers.letsencrypt.acme.httpChallenge=true \
+          --certificatesresolvers.letsencrypt.acme.httpChallenge.entryPoint=web \
+          --accesslog=true \
+          --accesslog.format=json \
+          --log.format=json
+
+    dokuwiki:
+      paths:
+        - <- `${monk-volume-path}/dokuwikistorage:/config`
+      ports:
+        - <- $enable-traefik not then(`80:80`)
+        - <- $enable-traefik not then(`443:443`)
+      image: lscr.io/linuxserver/dokuwiki
+      image-tag: latest
+      environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      labels:
+        - <- `traefik.enable=${enable-traefik}`
+
+        - traefik.http.routers.web.entrypoints=web
+        - traefik.http.routers.web.rule=PathPrefix(`/`)
+        - <- $force-https then(`traefik.http.routers.web.middlewares=web-forcessl@docker`)
+
+        - traefik.http.routers.websecure.entrypoints=websecure
+        - traefik.http.routers.websecure.rule=PathPrefix(`/`)
+
+        - traefik.http.routers.websecure.tls=true
+        - traefik.http.routers.websecure.tls.certresolver=letsencrypt
+        - <- `traefik.http.routers.websecure.tls.domains[0].main=${hostname}`
+        - traefik.http.routers.websecure.service=websecure
+
+        - <- $force-https then(`traefik.http.middlewares.web-forcessl.redirectscheme.scheme=https`)
+        - <- $force-https then(`traefik.http.middlewares.web-forcessl.redirectscheme.permanent=true`)
+
+        - traefik.http.services.websecure.loadbalancer.server.port=80
