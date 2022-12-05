@@ -38,6 +38,23 @@ server:
   #       kind: day
   #       start-time: 03:00
   #       start-day: MONDAY
+  services:
+    s80-traefik:
+      container: traefik
+      protocol: tcp
+      port: 80
+    s443-traefik:
+      container: traefik
+      protocol: tcp
+      port: 443
+    s80-dokuwiki:
+      container: dokuwiki
+      protocol: tcp
+      port: 80
+    s443-dokuwiki:
+      container: dokuwiki
+      protocol: tcp
+      port: 443
 
   containers:
     traefik:
@@ -69,8 +86,8 @@ server:
       paths:
         - <- `${monk-volume-path}/dokuwikistorage:/config`
       ports:
-        - <- $enable-traefik not then(`80:80`)
-        - <- $enable-traefik not then(`443:443`)
+        - <- $enable-traefik not then(`${http-port}:80`)
+        - <- $enable-traefik not then(`${https-port}:443`)
       image: lscr.io/linuxserver/dokuwiki
       image-tag: latest
       environment:
@@ -94,5 +111,6 @@ server:
 
         - <- $force-https then(`traefik.http.middlewares.web-forcessl.redirectscheme.scheme=https`)
         - <- $force-https then(`traefik.http.middlewares.web-forcessl.redirectscheme.permanent=true`)
+        - <- $force-https then(`traefik.http.middlewares.web-forcessl.redirectscheme.port=${https-port}`)
 
         - traefik.http.services.websecure.loadbalancer.server.port=80
