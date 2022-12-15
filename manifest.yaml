@@ -42,19 +42,19 @@ server:
     s80-traefik:
       container: traefik
       protocol: tcp
-      port: 80
+      port: <- $http-port to-i
     s443-traefik:
       container: traefik
       protocol: tcp
-      port: 443
+      port: <- $https-port to-i
     s80-dokuwiki:
       container: dokuwiki
       protocol: tcp
-      port: 80
+      port: <- $http-port to-i
     s443-dokuwiki:
       container: dokuwiki
       protocol: tcp
-      port: 443
+      port: <- $https-port to-i
 
   containers:
     traefik:
