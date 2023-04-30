@@ -12,15 +12,6 @@ server:
     tags: documentation, wiki, dokuwiki
 
   variables:
-    hostname:
-      type: string
-      value: <- ip-address-public
-    enable-traefik:
-      type: bool
-      value: true
-    force-https:
-      type: bool
-      value: true
     http-port:
       type: string
       value: 80
@@ -28,90 +19,25 @@ server:
       type: string
       value: 443
 
-  # volumes:
-  #   dokuwiki:
-  #     size: 200
-  #     kind: SSD
-  #     path: <- `${monk-volume-path}/dokuwikistorage`
-  #     backup:
-  #       rotation-days: 5
-  #       every: 1
-  #       kind: day
-  #       start-time: 03:00
-  #       start-day: MONDAY
   services:
-    s80-traefik:
-      container: traefik
-      protocol: tcp
-      port: <- $http-port to-i
-    s443-traefik:
-      container: traefik
-      protocol: tcp
-      port: <- $https-port to-i
-    s80-dokuwiki:
+    http:
       container: dokuwiki
       protocol: tcp
-      port: <- $http-port to-i
-    s443-dokuwiki:
+      port: 80
+      host-port: <- $http-port
+    https:
       container: dokuwiki
       protocol: tcp
-      port: <- $https-port to-i
+      port: 443
+      host-port: <- $https-port
 
   containers:
-    traefik:
-      image: traefik
-      image-tag: v2.9.1
-      paths:
-        - "/var/run/podman/podman.sock:/var/run/docker.sock:z"
-        - <- `${monk-volume-path}/dokuwikiacme:/acmestore`
-      ports:
-        - <- $enable-traefik then(`${http-port}:80`)
-        - <- $enable-traefik then(`${https-port}:443`)
-      bash: |
-        traefik \
-          --entrypoints.web.address=:80 \
-          --entrypoints.websecure.address=:443 \
-          --entrypoints.websecure.http.tls=true \
-          --providers.docker=true \
-          --providers.docker.exposedByDefault=false \
-          --log.level=INFO \
-          --certificatesresolvers.letsencrypt.acme.email=unsupported@unfortunateemail.com \
-          --certificatesresolvers.letsencrypt.acme.storage=/acmestore/acme.json \
-          --certificatesresolvers.letsencrypt.acme.httpChallenge=true \
-          --certificatesresolvers.letsencrypt.acme.httpChallenge.entryPoint=web \
-          --accesslog=true \
-          --accesslog.format=json \
-          --log.format=json
-
     dokuwiki:
       paths:
         - <- `${monk-volume-path}/dokuwikistorage:/config`
-      ports:
-        - <- $enable-traefik not then(`${http-port}:80`)
-        - <- $enable-traefik not then(`${https-port}:443`)
       image: lscr.io/linuxserver/dokuwiki
       image-tag: latest
       environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
-      labels:
-        - <- `traefik.enable=${enable-traefik}`
-
-        - traefik.http.routers.web.entrypoints=web
-        - traefik.http.routers.web.rule=PathPrefix(`/`)
-        - <- $force-https then(`traefik.http.routers.web.middlewares=web-forcessl@docker`)
-
-        - traefik.http.routers.websecure.entrypoints=websecure
-        - traefik.http.routers.websecure.rule=PathPrefix(`/`)
-
-        - traefik.http.routers.websecure.tls=true
-        - traefik.http.routers.websecure.tls.certresolver=letsencrypt
-        - <- `traefik.http.routers.websecure.tls.domains[0].main=${hostname}`
-        - traefik.http.routers.websecure.service=websecure
-
-        - <- $force-https then(`traefik.http.middlewares.web-forcessl.redirectscheme.scheme=https`)
-        - <- $force-https then(`traefik.http.middlewares.web-forcessl.redirectscheme.permanent=true`)
-        - <- $force-https then(`traefik.http.middlewares.web-forcessl.redirectscheme.port=${https-port}`)
-
-        - traefik.http.services.websecure.loadbalancer.server.port=80
