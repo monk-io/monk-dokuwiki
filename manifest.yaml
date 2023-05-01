@@ -13,10 +13,10 @@ server:
 
   variables:
     http-port:
-      type: string
+      type: int
       value: 80
     https-port:
-      type: string
+      type: int
       value: 443
 
   services:
