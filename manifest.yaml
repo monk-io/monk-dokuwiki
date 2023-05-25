@@ -9,7 +9,7 @@ server:
     publisher: monk.io
     description: DokuWiki is a simple to use and highly versatile Open Source wiki software that doesn't require a database. It is loved by users for its clean and readable syntax.
     source: https://github.com/splitbrain/dokuwiki
-    tags: documentation, dokuwiki
+    tags: documentation, dokuwiki, wiki, collaboration, markup
 
   variables:
     http-port:
