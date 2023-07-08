@@ -1,5 +1,4 @@
-Dokuwiki meets Monk
-===
+# Dokuwiki meets Monk
 
 This repository contains Monk.io template to deploy Dokuwiki system either locally or on cloud of your choice (AWS, GCP, Azure, Digital Ocean).
 
@@ -10,7 +9,7 @@ If you wish to disable Traefik(for example you have your own reverse proxy) plea
 
 - [Dokuwiki meets Monk](#dokuwiki-meets-monk)
   - [Prerequisites](#prerequisites)
-    - [Make sure monkd is running.](#make-sure-monkd-is-running)
+    - [Make sure monkd is running](#make-sure-monkd-is-running)
     - [Clone Repository](#clone-repository)
     - [Load Template](#load-template)
     - [Verify if it's loaded correctly](#verify-if-its-loaded-correctly)
@@ -21,12 +20,13 @@ If you wish to disable Traefik(for example you have your own reverse proxy) plea
   - [Persistency](#persistency)
 
 ## Prerequisites
+
 - [Install Monk](https://docs.monk.io/docs/get-monk)
 - [Register and Login Monk](https://docs.monk.io/docs/acc-and-auth)
 - [Add Cloud Provider](https://docs.monk.io/docs/cloud-provider)
 - [Add Instance](https://docs.monk.io/docs/multi-cloud)
 
-### Make sure monkd is running.
+### Make sure monkd is running
 
 ```bash
 foo@bar:~$ monk status
@@ -115,5 +115,6 @@ monk purge -x dokuwiki/server
 ```
 
 ## Persistency
+
 If you're using any of the clouds available via Monk. You can use volume definition to spin a disk block device to make your Dokuwiki instance independent from the node it's running on.
 To do simply uncomment the `volume` block in `manifest.yaml`

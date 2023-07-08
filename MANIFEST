@@ -1,2 +1,2 @@
-REPO monk-dokuwiki
-LOAD manifest.yaml
+--- REPO monk-dokuwiki LOAD manifest.yaml
+...
